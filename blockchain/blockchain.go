@@ -4,7 +4,6 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"math/rand"
 	"strings"
 	"time"
 )
@@ -72,6 +71,7 @@ func (bc *Blockchain) ValidateChain() error {
 	return nil
 }
 
+/*
 func (bc *Blockchain) Mine(mine_id uint64, data string) *Block {
 	h := sha256.New()
 	h.Write([]byte(fmt.Sprintf("%d", mine_id)))
@@ -98,6 +98,32 @@ func (bc *Blockchain) Mine(mine_id uint64, data string) *Block {
 
 	return nil
 
+}
+*/
+
+func (bc *Blockchain) CreateBlock(data string) Block {
+	return NewBlock(
+		uint64(len(bc.chain)),
+		data,
+		bc.chain[len(bc.chain)-1].Hash,
+	)
+}
+
+func (bc *Blockchain) Mine(block Block) *MiningResult {
+	start := time.Now().UnixMilli()
+	for {
+		block.Hash = block.CalculateHash()
+		if strings.HasPrefix(block.Hash, strings.Repeat("0", int(bc.difficulty))) {
+			end := time.Now().UnixMilli()
+			bc.chain = append(bc.chain, block)
+			return NewMiningResult(
+				&block,
+				block.Hash,
+				uint64(end-start),
+			)
+		}
+		block.Nonce++
+	}
 }
 
 func (bc *Blockchain) SetDifficulty(difficulty uint64) {

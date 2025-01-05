@@ -13,6 +13,7 @@ type Block struct {
 	Data      string `json:"data"`
 	PrevHash  string `json:"prevHash"`
 	Hash      string `json:"hash"`
+	Nonce     uint64 `json:"nonce"`
 }
 
 func NewBlock(index uint64, data string, prevHash string) Block {
@@ -22,6 +23,7 @@ func NewBlock(index uint64, data string, prevHash string) Block {
 		Data:      data,
 		PrevHash:  prevHash,
 		Hash:      "",
+		Nonce:     0,
 	}
 	block.Hash = block.CalculateHash()
 	return block
@@ -36,11 +38,12 @@ func (b *Block) CalculateHash() string {
 	h.Write(
 		[]byte(
 			fmt.Sprintf(
-				"%d%d%s%s",
+				"%d%d%s%s%d",
 				b.Index,
 				b.Timestamp,
 				b.Data,
 				b.PrevHash,
+				b.Nonce,
 			),
 		),
 	)

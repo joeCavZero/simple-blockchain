@@ -75,50 +75,25 @@ func (a *Api) getBlock(w http.ResponseWriter, r *http.Request) {
 
 func (a *Api) mine(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var body_data map[string]interface{}
+	var body_data map[string]string
 	err := json.NewDecoder(r.Body).Decode(&body_data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	// mine_id
-	interface_mine_id, ok := body_data["mine_id"]
-	if !ok {
-		http.Error(w, "'mine_id' is required", http.StatusBadRequest)
-		return
-	}
-	mine_id_float, ok := interface_mine_id.(float64)
-	if !ok {
-		http.Error(w, "'mine_id' must be a number", http.StatusBadRequest)
-		return
-	}
-	mine_id := uint64(mine_id_float)
-	if !ok {
-		http.Error(w, "'mine_id' must be an uint64", http.StatusBadRequest)
-		return
-	}
 	// data
-	interface_data, ok := body_data["data"]
+	data, ok := body_data["data"]
 	if !ok {
 		http.Error(w, "'data' is required", http.StatusBadRequest)
 		return
 	}
-	data, ok := interface_data.(string)
-	if !ok {
-		http.Error(w, "'data' must be a string", http.StatusBadRequest)
-		return
-	}
 
-	block := a.blockchain.Mine(mine_id, data)
-	if block == nil {
-		http.Error(w, "Could not mine the block", http.StatusBadRequest)
-		return
-	}
+	newBlock := a.blockchain.CreateBlock(data)
 
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(*block)
-
+	mining_result := a.blockchain.Mine(newBlock)
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(mining_result)
 }
 
 func (a *Api) validate(w http.ResponseWriter, r *http.Request) {
@@ -150,14 +125,15 @@ func (a *Api) setDifficulty(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "'difficulty' must be a number", http.StatusBadRequest)
 		return
 	}
-	difficulty := uint64(difficulty_float)
-	if !ok {
-		http.Error(w, "'difficulty' must be an uint64", http.StatusBadRequest)
+
+	if difficulty_float < 0 {
+		http.Error(w, "'difficulty' must be greater than 0", http.StatusBadRequest)
 		return
 	}
 
-	if difficulty < 0 {
-		http.Error(w, "'difficulty' must be greater than 0", http.StatusBadRequest)
+	difficulty := uint64(difficulty_float)
+	if !ok {
+		http.Error(w, "'difficulty' must be an uint64", http.StatusBadRequest)
 		return
 	}
 
