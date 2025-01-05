@@ -1,8 +1,8 @@
 package main
 
 import (
-	"project/api"
-	"project/blockchain"
+	"github.com/joeCavZero/simple-blockchain/api"
+	"github.com/joeCavZero/simple-blockchain/blockchain"
 )
 
 func main() {

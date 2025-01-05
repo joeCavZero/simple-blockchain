@@ -1,4 +1,4 @@
-module project
+module github.com/joeCavZero/simple-blockchain
 
 go 1.22.0
 

@@ -6,7 +6,11 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/joeCavZero/simple-blockchain/logkit"
 )
+
+var bclk = logkit.NewLogkit("Blockchain")
 
 type Blockchain struct {
 	chain      []Block
@@ -43,6 +47,7 @@ func (bc *Blockchain) GetBlock(index uint64) (Block, error) {
 func (bc *Blockchain) ValidateChain() error {
 
 	if len(bc.chain) == 0 {
+		bclk.Error("The chain is empty")
 		return errors.New("the chain is empty")
 	}
 
@@ -53,6 +58,7 @@ func (bc *Blockchain) ValidateChain() error {
 
 		// Check if the actual~previous hash linking is valid
 		if actualBlock.PrevHash != previousBlock.Hash {
+			bclk.Error("The chain is invalid, the %d block has an invalid previous hash", string(actualBlock.Index))
 			return fmt.Errorf(
 				"the chain is invalid, the %d block has an invalid previous hash",
 				actualBlock.Index,
@@ -61,6 +67,7 @@ func (bc *Blockchain) ValidateChain() error {
 
 		// Check if the actual hash is valid
 		if actualBlock.Hash != actualBlock.CalculateHash() {
+			bclk.Error("The chain is invalid, the", string(actualBlock.Index), "block has an invalid hash")
 			return fmt.Errorf(
 				"the chain is invalid, the %d block has an invalid hash",
 				actualBlock.Index,
@@ -71,36 +78,6 @@ func (bc *Blockchain) ValidateChain() error {
 	return nil
 }
 
-/*
-func (bc *Blockchain) Mine(mine_id uint64, data string) *Block {
-	h := sha256.New()
-	h.Write([]byte(fmt.Sprintf("%d", mine_id)))
-	mine_id_hash := fmt.Sprintf("%x", h.Sum(nil))
-
-	hash := mine_id_hash[:bc.difficulty]
-
-	if strings.HasPrefix(bc.mine_hash, hash) {
-
-		block := NewBlock(
-			uint64(len(bc.chain)),
-			data,
-			bc.chain[len(bc.chain)-1].Hash,
-		)
-
-		bc.chain = append(bc.chain, block)
-
-		// set the new mine_hash based on a random number
-		r := rand.New(rand.NewSource(time.Now().UnixNano()))
-		bc.mine_hash = fmt.Sprintf("%x", r.Int63())
-
-		return &block
-	}
-
-	return nil
-
-}
-*/
-
 func (bc *Blockchain) CreateBlock(data string) Block {
 	return NewBlock(
 		uint64(len(bc.chain)),
@@ -109,17 +86,17 @@ func (bc *Blockchain) CreateBlock(data string) Block {
 	)
 }
 
-func (bc *Blockchain) Mine(block Block) *MiningResult {
+func (bc *Blockchain) Mine(block *Block) *MiningResult {
 	start := time.Now().UnixMilli()
 	for {
 		block.Hash = block.CalculateHash()
 		if strings.HasPrefix(block.Hash, strings.Repeat("0", int(bc.difficulty))) {
-			end := time.Now().UnixMilli()
-			bc.chain = append(bc.chain, block)
+			time := uint64(time.Now().UnixMilli() - start)
+			bc.chain = append(bc.chain, *block)
+			bclk.Infof("Block %d hash %s mined in %d ms", block.Index, block.Hash, time)
 			return NewMiningResult(
-				&block,
-				block.Hash,
-				uint64(end-start),
+				block,
+				uint64(time),
 			)
 		}
 		block.Nonce++

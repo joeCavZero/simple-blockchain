@@ -4,11 +4,16 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"project/blockchain"
 	"strconv"
+
+	"github.com/joeCavZero/simple-blockchain/blockchain"
+
+	"github.com/joeCavZero/simple-blockchain/logkit"
 
 	"github.com/gorilla/mux"
 )
+
+var apilk = logkit.NewLogkit("API")
 
 type Api struct {
 	blockchain *blockchain.Blockchain
@@ -46,6 +51,9 @@ func (a *Api) getBlocks(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(blocks)
+
+	ip := r.RemoteAddr
+	apilk.Info("List of blocks sent to the client", ip)
 }
 
 func (a *Api) getBlock(w http.ResponseWriter, r *http.Request) {
@@ -63,14 +71,19 @@ func (a *Api) getBlock(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 	}
 
+	ip := r.RemoteAddr
+
 	block, err := a.blockchain.GetBlock(uint64(index))
 	if err != nil {
+		apilk.Error("Block", raw_index, "not found", ip)
 		http.Error(w, err.Error(), http.StatusNotFound)
 		return
 	}
 
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(block)
+
+	apilk.Info("Block", raw_index, "sent to the client", ip)
 }
 
 func (a *Api) mine(w http.ResponseWriter, r *http.Request) {
@@ -91,22 +104,31 @@ func (a *Api) mine(w http.ResponseWriter, r *http.Request) {
 
 	newBlock := a.blockchain.CreateBlock(data)
 
-	mining_result := a.blockchain.Mine(newBlock)
+	mining_result := a.blockchain.Mine(&newBlock)
 	w.WriteHeader(http.StatusOK)
 	json.NewEncoder(w).Encode(mining_result)
+
+	ip := r.RemoteAddr
+	apilk.Info("Block", string(mining_result.MinedBlock.Index), "mined by the client", ip)
 }
 
 func (a *Api) validate(w http.ResponseWriter, r *http.Request) {
 	err := a.blockchain.ValidateChain()
+	ip := r.RemoteAddr
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
+		apilk.Error("Chain validation failed", ip)
+		return
 	}
 
 	w.WriteHeader(http.StatusOK)
+
+	apilk.Info("Chain validated by the client", ip)
 }
 
 func (a *Api) setDifficulty(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
+
 	var body_data map[string]interface{}
 	err := json.NewDecoder(r.Body).Decode(&body_data)
 	if err != nil {
@@ -139,4 +161,7 @@ func (a *Api) setDifficulty(w http.ResponseWriter, r *http.Request) {
 
 	a.blockchain.SetDifficulty(difficulty)
 	w.WriteHeader(http.StatusOK)
+
+	ip := r.RemoteAddr
+	apilk.Info("Difficulty set to", string(difficulty), "by the client", ip)
 }
