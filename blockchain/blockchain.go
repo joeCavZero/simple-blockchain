@@ -1,30 +1,31 @@
 package blockchain
 
 import (
+	"crypto/sha256"
 	"errors"
 	"fmt"
+	"math/rand"
+	"strings"
+	"time"
 )
 
 type Blockchain struct {
-	chain []Block
+	chain      []Block
+	mine_hash  string
+	difficulty uint64
 }
 
 func NewBlockchain() *Blockchain {
+	genesis := NewGenesisBlock()
+	h := sha256.New()
+	h.Write([]byte(genesis.Hash))
+	mine_hash := fmt.Sprintf("%x", h.Sum(nil))
+
 	return &Blockchain{
-		chain: []Block{NewGenesisBlock()},
+		chain:      []Block{genesis},
+		mine_hash:  mine_hash,
+		difficulty: 3,
 	}
-}
-
-func (bc *Blockchain) AddBlock(data string) Block {
-	lastBlock := bc.chain[len(bc.chain)-1]
-	newBlock := NewBlock(
-		lastBlock.Index+1,
-		data,
-		lastBlock.Hash,
-	)
-
-	bc.chain = append(bc.chain, newBlock)
-	return newBlock
 }
 
 func (bc *Blockchain) GetChain() []Block {
@@ -69,4 +70,36 @@ func (bc *Blockchain) ValidateChain() error {
 	}
 
 	return nil
+}
+
+func (bc *Blockchain) Mine(mine_id uint64, data string) *Block {
+	h := sha256.New()
+	h.Write([]byte(fmt.Sprintf("%d", mine_id)))
+	mine_id_hash := fmt.Sprintf("%x", h.Sum(nil))
+
+	hash := mine_id_hash[:bc.difficulty]
+
+	if strings.HasPrefix(bc.mine_hash, hash) {
+
+		block := NewBlock(
+			uint64(len(bc.chain)),
+			data,
+			bc.chain[len(bc.chain)-1].Hash,
+		)
+
+		bc.chain = append(bc.chain, block)
+
+		// set the new mine_hash based on a random number
+		r := rand.New(rand.NewSource(time.Now().UnixNano()))
+		bc.mine_hash = fmt.Sprintf("%x", r.Int63())
+
+		return &block
+	}
+
+	return nil
+
+}
+
+func (bc *Blockchain) SetDifficulty(difficulty uint64) {
+	bc.difficulty = difficulty
 }

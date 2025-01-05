@@ -3,6 +3,7 @@ package blockchain
 import (
 	"crypto/sha256"
 	"fmt"
+	"strings"
 	"time"
 )
 
@@ -44,4 +45,9 @@ func (b *Block) CalculateHash() string {
 		),
 	)
 	return fmt.Sprintf("%x", h.Sum(nil))
+}
+
+func (b *Block) IsValid(difficulty uint64) bool {
+	aux := strings.Repeat("0", int(difficulty))
+	return strings.HasPrefix(b.Hash, aux)
 }
