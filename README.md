@@ -40,7 +40,7 @@ A simple blockchain implementation in Go, designed for learning purposes.
 - ```/api/mine``` - Mines a new block with the data provided in the request body.
     ```json
     {
-        "data": "Daniel da Silva Cavalcante bought the LATAM Airlines"
+        "data": "Joe bought the LATAM Airlines"
     }
     ```
 - ```/api/difficulty``` - Sets the mining difficulty.
