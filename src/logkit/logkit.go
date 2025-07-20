@@ -26,7 +26,7 @@ func NewLogkit(prefix string) *Logkit {
 
 func (l *Logkit) Info(msg ...string) {
 	fmt.Printf(
-		"%s%s %s%s %s%s\n",
+		"%s%s %s[%s] %s%s\n",
 		green, "[INFO]",
 		prefix_color, l.prefix,
 		reset, strings.Join(msg, " "),
@@ -35,7 +35,7 @@ func (l *Logkit) Info(msg ...string) {
 
 func (l *Logkit) Infof(format string, args ...interface{}) {
 	fmt.Printf(
-		"%s%s %s%s %s%s\n",
+		"%s%s %s[%s] %s%s\n",
 		green, "[INFO]",
 		prefix_color, l.prefix,
 		reset, fmt.Sprintf(format, args...),
@@ -44,7 +44,7 @@ func (l *Logkit) Infof(format string, args ...interface{}) {
 
 func (lk *Logkit) Error(msg ...string) {
 	fmt.Printf(
-		"%s%s %s%s %s%s\n",
+		"%s%s %s[%s] %s%s\n",
 		red, "[ERROR]",
 		prefix_color, lk.prefix,
 		reset, strings.Join(msg, " "),
@@ -53,7 +53,7 @@ func (lk *Logkit) Error(msg ...string) {
 
 func (lk *Logkit) Errorf(format string, args ...interface{}) {
 	fmt.Printf(
-		"%s%s %s%s %s%s\n",
+		"%s%s %s[%s] %s%s\n",
 		red, "[ERROR]",
 		prefix_color, lk.prefix,
 		reset, fmt.Sprintf(format, args...),
@@ -64,7 +64,7 @@ func (lk *Logkit) LineError(line uint16, msg ...string) {
 	aux := append(
 		[]string{
 			"line", fmt.Sprint(line), "error:",
-			string(line),
+			fmt.Sprint(line),
 		},
 		msg...,
 	)
@@ -75,7 +75,7 @@ func (lk *Logkit) LineInfo(line uint16, msg ...string) {
 	aux := append(
 		[]string{
 			"line", fmt.Sprint(line), "info:",
-			string(line),
+			fmt.Sprint(line),
 		},
 		msg...,
 	)

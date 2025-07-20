@@ -7,7 +7,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joeCavZero/simple-blockchain/logkit"
+	"github.com/joeCavZero/simple-blockchain/src/logkit"
 )
 
 var bclk = logkit.NewLogkit("Blockchain")
@@ -58,7 +58,10 @@ func (bc *Blockchain) ValidateChain() error {
 
 		// Check if the actual~previous hash linking is valid
 		if actualBlock.PrevHash != previousBlock.Hash {
-			bclk.Error("The chain is invalid, the %d block has an invalid previous hash", string(actualBlock.Index))
+			bclk.Errorf(
+				"The chain is invalid, the %d block has an invalid previous hash",
+				actualBlock.Index,
+			)
 			return fmt.Errorf(
 				"the chain is invalid, the %d block has an invalid previous hash",
 				actualBlock.Index,
@@ -67,7 +70,10 @@ func (bc *Blockchain) ValidateChain() error {
 
 		// Check if the actual hash is valid
 		if actualBlock.Hash != actualBlock.CalculateHash() {
-			bclk.Error("The chain is invalid, the", string(actualBlock.Index), "block has an invalid hash")
+			bclk.Errorf(
+				"The chain is invalid, the %d block has an invalid hash",
+				actualBlock.Index,
+			)
 			return fmt.Errorf(
 				"the chain is invalid, the %d block has an invalid hash",
 				actualBlock.Index,

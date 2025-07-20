@@ -6,9 +6,9 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/joeCavZero/simple-blockchain/blockchain"
+	"github.com/joeCavZero/simple-blockchain/src/blockchain"
 
-	"github.com/joeCavZero/simple-blockchain/logkit"
+	"github.com/joeCavZero/simple-blockchain/src/logkit"
 
 	"github.com/gorilla/mux"
 )
@@ -25,7 +25,7 @@ func NewApi(bc *blockchain.Blockchain) *Api {
 	}
 }
 
-func (a *Api) Run(addr string) {
+func (a *Api) Run(addr uint16) {
 	router := mux.NewRouter()
 
 	router.HandleFunc("/api/blocks", a.getBlocks).Methods("GET")
@@ -38,8 +38,12 @@ func (a *Api) Run(addr string) {
 
 	router.HandleFunc("/api/difficulty", a.setDifficulty).Methods("POST")
 
-	fmt.Printf("Listening on port %s\n", addr)
-	err := http.ListenAndServe(addr, router)
+	apilk.Infof("API is running on port %d", addr)
+
+	err := http.ListenAndServe(
+		fmt.Sprintf(":%d", addr),
+		router,
+	)
 	if err != nil {
 		panic(err)
 	}
@@ -109,7 +113,11 @@ func (a *Api) mine(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(mining_result)
 
 	ip := r.RemoteAddr
-	apilk.Info("Block", string(mining_result.MinedBlock.Index), "mined by the client", ip)
+	apilk.Infof(
+		"Block %d mined by the client %s",
+		mining_result.MinedBlock.Index,
+		ip,
+	)
 }
 
 func (a *Api) validate(w http.ResponseWriter, r *http.Request) {
@@ -163,5 +171,9 @@ func (a *Api) setDifficulty(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusOK)
 
 	ip := r.RemoteAddr
-	apilk.Info("Difficulty set to", string(difficulty), "by the client", ip)
+	apilk.Infof(
+		"Difficulty set to %d by the client %s",
+		difficulty,
+		ip,
+	)
 }

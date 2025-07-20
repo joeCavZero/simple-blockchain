@@ -1,14 +1,31 @@
 package main
 
 import (
-	"github.com/joeCavZero/simple-blockchain/api"
-	"github.com/joeCavZero/simple-blockchain/blockchain"
+	"os"
+
+	"github.com/joeCavZero/simple-blockchain/src/api"
+	"github.com/joeCavZero/simple-blockchain/src/blockchain"
+	"github.com/joeCavZero/simple-blockchain/src/cli"
+	"github.com/joeCavZero/simple-blockchain/src/logkit"
 )
 
 func main() {
-	newBlockchain := blockchain.NewBlockchain()
+	mainlk := logkit.NewLogkit("Main")
 
-	api := api.NewApi(newBlockchain)
-	api.Run(":8000")
+	cli := cli.NewCli()
+
+	switch cli.Mode {
+	case "prod":
+		newBlockchain := blockchain.NewBlockchain()
+
+		api := api.NewApi(newBlockchain)
+		api.Run(cli.Port)
+	case "test":
+		mainlk.Info("Test mod is not implemented yet")
+		os.Exit(0)
+	default:
+		mainlk.Error("Invalid mode")
+		os.Exit(1)
+	}
 
 }
